@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.angular/
+coverage/
+playwright-report/
+test-results/
+.env
+.env.*
+!.env.example
+*.log
+*.pem
+*.key
+.local/
+apps/api/src/generated/
+*.tsbuildinfo

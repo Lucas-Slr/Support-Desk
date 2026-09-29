@@ -1,0 +1,47 @@
+name: Quality and security scenarios
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: support
+          POSTGRES_PASSWORD: ci-disposable-postgres
+          POSTGRES_DB: support_desk
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U support -d support_desk"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://support:ci-disposable-postgres@localhost:5432/support_desk
+      TEST_DATABASE_URL: postgresql://support:ci-disposable-postgres@localhost:5432/support_desk_test
+      JWT_SECRET: ci-only-jwt-key-never-use-outside-ephemeral-ci-0123456789
+      JWT_ISSUER: support-desk-api
+      JWT_AUDIENCE: support-desk-web
+      ALLOWED_ORIGINS: http://localhost:4200
+      DEMO_PASSWORD: CI-only-demo-passphrase-2026
+      PORT: 3100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: node --input-type=module -e "import pg from 'pg'; const c=new pg.Client({connectionString:process.env.DATABASE_URL}); await c.connect(); await c.query('CREATE DATABASE support_desk_test'); await c.end();"
+      - run: npm run db:generate
+      - run: npm run db:migrate
+      - run: npm run db:migrate:test
+      - run: npm run db:seed
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

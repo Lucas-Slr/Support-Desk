@@ -1,0 +1,48 @@
+{
+  "name": "support-desk",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24.15.0 <25"
+  },
+  "scripts": {
+    "dev:api": "npm run dev -w @support-desk/api",
+    "dev:web": "npm run start -w @support-desk/web",
+    "db:generate": "npm run db:generate -w @support-desk/api",
+    "db:migrate": "npm run db:migrate -w @support-desk/api",
+    "db:seed": "npm run db:seed -w @support-desk/api",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "setup:local": "node scripts/setup-local.mjs",
+    "db:local": "node scripts/local-postgres.mjs",
+    "db:migrate:test": "node scripts/migrate-test.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.58.0",
+    "@types/node": "^24.0.0",
+    "embedded-postgres": "^18.4.0-beta.17",
+    "eslint": "^10.11.0",
+    "prettier": "^3.8.0",
+    "prisma": "^7.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "~6.0.0",
+    "typescript-eslint": "^8.57.0",
+    "vitest": "^4.0.0"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.2",
+    "mysql2": "^3.24.4"
+  }
+}
