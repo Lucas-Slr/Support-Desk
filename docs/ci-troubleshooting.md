@@ -1,4 +1,4 @@
-# Dépendances natives absentes dans la CI
+# Dépannage de la CI
 
 ## Symptôme
 
@@ -30,3 +30,15 @@ L’avertissement relatif au runtime Node.js des actions checkout/setup-node est
 - Sous Windows, les 18 tests Angular avec `CI=true`, le build Angular, ESLint et Prettier passent.
 
 L’installation ciblée vérifie la résolution et le téléchargement des dépendances Linux ; elle n’exécute pas leurs binaires sous Windows. Le job Ubuntu complet reste à confirmer sur GitHub après publication du correctif.
+
+## Timeout Playwright au démarrage des serveurs
+
+Symptôme : les étapes précédentes passent, puis `npm run test:e2e` signale que le port 3100 est occupé et dépasse les 60 secondes d’attente de `config.webServer`.
+
+La variable `PORT=3100` était définie pour tout le job. Angular donne priorité à cette variable sur l’option `--port 4200` : le frontend essayait donc de démarrer sur le port de l’API, alors que Playwright l’attendait sur 4200. Le message concernant le prebundling désactivé est informatif.
+
+Le port global a été retiré du workflow. `playwright.config.ts` fournit explicitement `PORT=3100` et `HOST=127.0.0.1` au processus API, et `PORT=4200` au processus Angular. Le contrôle de santé API utilise `127.0.0.1`, comme son adresse d’écoute et la cible du proxy ; il ne dépend plus de la résolution IPv4/IPv6 de localhost. Les sorties de démarrage sont affichées pour faciliter les diagnostics.
+
+Pour vérifier l’isolation des ports, lancer les E2E sans serveurs API/Angular préexistants, avec `CI=true`, `NODE_ENV=test` et même un `PORT=3100` hérité : Playwright doit lancer chaque serveur sur son propre port. PostgreSQL et les données de démonstration doivent être disponibles. Augmenter le timeout ne corrigerait pas ce conflit d’adresse.
+
+Vérification locale du 4 octobre 2026 : les 5 tests E2E passent en 23 secondes dans ces conditions sous Windows ; les logs confirment l’API sur 127.0.0.1:3100 et Angular sur localhost:4200. ESLint et le formatage passent également. L’exécution Ubuntu complète reste à confirmer après le push.

@@ -25,7 +25,6 @@ jobs:
       JWT_AUDIENCE: support-desk-web
       ALLOWED_ORIGINS: http://localhost:4200
       DEMO_PASSWORD: CI-only-demo-passphrase-2026
-      PORT: 3100
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
