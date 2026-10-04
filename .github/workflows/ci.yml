@@ -32,7 +32,11 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      - name: Check native dependencies in lockfile
+        run: node scripts/check-native-lock.mjs
+      - run: npm ci --include=optional
+      - name: Load native parser on runner
+        run: node --input-type=module -e "await import('oxc-parser'); console.log('Native parser loaded on', process.platform, process.arch);"
       - run: node --input-type=module -e "import pg from 'pg'; const c=new pg.Client({connectionString:process.env.DATABASE_URL}); await c.connect(); await c.query('CREATE DATABASE support_desk_test'); await c.end();"
       - run: npm run db:generate
       - run: npm run db:migrate
@@ -41,7 +45,10 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
-      - run: npm test
+      - name: Backend tests
+        run: npm run test -w @support-desk/api
+      - name: Frontend tests
+        run: npm run test -w @support-desk/web
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
